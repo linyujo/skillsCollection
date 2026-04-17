@@ -1,0 +1,32 @@
+name: Daily Skill Sync
+
+on:
+  schedule:
+    - cron: "0 0 * * *" # 每天凌晨 12 點執行
+  workflow_dispatch: # 允許手動從網頁介面觸發
+
+jobs:
+  sync-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout local repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      - name: Run sync script
+        run: python sync_skills.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "Skill-Sync-Bot"
+          git config --global user.email "actions@github.com"
+          git add .
+          # 只有在有檔案變動時才 commit，避免 workflow 報錯
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: Sync skills from source repos" && git push)
