@@ -1,19 +1,10 @@
 ---
 name: r3f-best-practices
-description: React Three Fiber (R3F) and Poimandres ecosystem best practices. Use when writing, reviewing, or optimizing R3F code. Triggers on tasks involving @react-three/fiber, @react-three/drei, zustand, @react-three/postprocessing, @react-three/rapier, or leva.
+description: React Three Fiber (R3F) and Poimandres ecosystem decision framework. Use when writing, reviewing, or optimizing R3F code.
 metadata:
   author: three-agent-skills
   version: "1.1.0"
 ---
-
-# React Three Fiber Best Practices
-
-Comprehensive guide for React Three Fiber and the Poimandres ecosystem. Contains 70+ rules across 12 categories, prioritized by impact.
-
-## Sources & Credits
-
-> Additional tips from [100 Three.js Tips](https://www.utsubo.com/blog/threejs-best-practices-100-tips) by [Utsubo](https://www.utsubo.com)
-> Original document: [three-agent-skills](https://github.com/emalorenzo/three-agent-skills) by [Emanuel Lorenzo](https://github.com/emalorenzo)
 
 ## When to Apply
 
@@ -36,7 +27,7 @@ Reference these guidelines when:
 
 ## Rule Categories by Priority
 
-| Priority | Category                 | Impact      | Prefix       |
+| Priority | Category                 | Impact      | Rule Prefix  |
 | -------- | ------------------------ | ----------- | ------------ |
 | 1        | Performance & Re-renders | CRITICAL    | `perf-`      |
 | 2        | useFrame & Animation     | CRITICAL    | `frame-`     |
@@ -47,8 +38,40 @@ Reference these guidelines when:
 | 7        | State Management         | MEDIUM      | `state-`     |
 | 8        | Events & Interaction     | MEDIUM      | `events-`    |
 | 9        | Post-processing          | MEDIUM      | `postpro-`   |
-| 10       | Physics (Rapier)         | LOW-MEDIUM  | `physics-`   |
+| 10       | Physics Rapier           | LOW-MEDIUM  | `physics-`   |
 | 11       | Leva (Debug GUI)         | LOW         | `leva-`      |
+
+## Quick Route
+
+| Scenario           | Key Features / Keywords                             | Category                                                           |
+| ------------------ | --------------------------------------------------- | ------------------------------------------------------------------ |
+| Scene setup        | Canvas, Context, Lights, Shadows, Basic config      | Canvas & Setup, Component Patterns, Loading & Suspense             |
+| Simple viewer      | useGLTF, .glb/.gltf, Preloading, Environment        | Loading & Suspense, Drei Helpers, Performance & Re-renders         |
+| HTML / UI Overlays | Html, Text, DOM elements in 3D, Annotations, UI     | Drei Helpers, Events & Interaction, Performance & Re-renders       |
+| Custom geometry    | bufferGeometry, 3D shapes, Attributes, Vertices     | Component Patterns, Performance & Re-renders                       |
+| Particles / VFX    | Points, InstancedMesh, Math heavy, Frame delta      | useFrame & Animation, Performance & Re-renders, Post-processing    |
+| Shader art         | shaderMaterial, Uniforms, GLSL, Procedural          | useFrame & Animation, Performance & Re-renders, Component Patterns |
+| Interactivity      | onClick, onPointerOver, Raycasting, Hover states    | Events & Interaction, Component Patterns                           |
+| Global State       | Zustand, Cross-component state, UI-to-3D comms      | State Management, Performance & Re-renders                         |
+| Physics            | Rapier, RigidBody, Colliders, Gravity, Collisions   | Physics Rapier, Performance & Re-renders, useFrame & Animation     |
+| Post-processing    | EffectComposer, Bloom, SMAA, Depth of Field         | Post-processing, Performance & Re-renders, Canvas & Setup          |
+| Camera Controls    | OrbitControls, PresentationControls, Lerp           | Drei Helpers, useFrame & Animation, Events & Interaction           |
+| Game/simulation    | Complex logic, Multiple systems, Optimization heavy | All skills                                                         |
+
+## How to Use Categories
+
+Read individual rule files for detailed explanations and code examples:
+
+1. Go to Quick Reference
+2. Find the category that matches your needs
+3. Read the rules in that category
+4. Apply the rules to your code
+
+```
+rules/perf-never-set-state-in-useframe.md
+rules/drei-use-gltf.md
+rules/state-zustand-selectors.md
+```
 
 ## Quick Reference
 
@@ -163,16 +186,6 @@ Zustand is the recommended state manager for R3F.
 - `leva-folders` - Organize with folders
 - `leva-conditional` - Hide in production
 
-## How to Use
-
-Read individual rule files for detailed explanations and code examples:
-
-```
-rules/perf-never-set-state-in-useframe.md
-rules/drei-use-gltf.md
-rules/state-zustand-selectors.md
-```
-
 ## Quick Reference Card
 
 ### Critical (Always Do)
@@ -199,3 +212,9 @@ rules/state-zustand-selectors.md
 - [ ] Postprocessing: EffectComposer with SMAA
 - [ ] Rapier: Simple colliders, collision events
 - [ ] Leva: Hidden in production
+
+## Sources & Credits
+
+> Additional tips from [100 Three.js Tips](https://www.utsubo.com/blog/threejs-best-practices-100-tips) by [Utsubo](https://www.utsubo.com)
+> Original document: [three-agent-skills](https://github.com/emalorenzo/three-agent-skills) by [Emanuel Lorenzo](https://github.com/emalorenzo)
+> R3F Router: [r3f-router](https://github.com/Bbeierle12/Skill-MCP-Claude/blob/main/skills/r3f-router/SKILL.md) by [Bbeierle12](https://github.com/Bbeierle12)
