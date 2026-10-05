@@ -75,22 +75,22 @@ React re-renders are the #1 performance killer in R3F. The render loop runs at 6
 
 useFrame is R3F's render loop hook. Misuse causes performance disasters.
 
-- `frame-priority` - Use priority for execution order
+- `frame-priority` - Positive priority takes over rendering; order with negative numbers and 0
 - `frame-delta-time` - Always use delta for animations
-- `frame-conditional-subscription` - Disable useFrame when not needed
+- `frame-conditional-subscription` - Unmount to unsubscribe, early return to pause
 - `frame-render-on-demand` - Use invalidate() for on-demand rendering
 
 ### 3. Component Patterns (HIGH)
 
-- `component-primitive` - Use primitive for existing objects
-- `component-extend` - Use extend() for custom classes
+- `component-primitive` - Clone loaded models correctly before reusing them
+- `component-extend` - Use the v9 extend() API and ThreeElements typing
 - `component-dispose-null` - Set dispose={null} on shared resources
 
 ### 4. Canvas & Setup (HIGH)
 
 Proper Canvas configuration
 
-- `canvas-linear-flat` - Use linear/flat for correct colors
+- `canvas-linear-flat` - Don't override R3F's color management
 
 ### 7. State Management (MEDIUM)
 
@@ -101,7 +101,7 @@ Zustand is the recommended state manager for R3F.
 
 ### 8. Events & Interaction (MEDIUM)
 
-- `events-stop-propagation` - Prevent event bubbling
+- `events-stop-propagation` - Events pass through objects; stop them explicitly
 
 ## Quick Reference Card
 
@@ -111,10 +111,13 @@ Zustand is the recommended state manager for R3F.
 - [ ] Use Zustand selectors (not entire store)
 - [ ] Use refs for animation, not state
 - [ ] Use delta time for animations
+- [ ] Never use a positive useFrame priority just for ordering
 
 ### High Priority
 
 - [ ] Use dispose={null} for shared resources
+- [ ] Clone cached models with SkeletonUtils.clone inside useMemo
+- [ ] Don't override R3F's default color management
 
 ### Poimandres Ecosystem
 

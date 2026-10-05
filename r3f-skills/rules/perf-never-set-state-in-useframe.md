@@ -37,8 +37,8 @@ Garbage collection pauses
 function GoodComponent() {
   const meshRef = useRef();
 
-  useFrame(() => {
-    meshRef.current.position.x += 0.01;
+  useFrame((_, delta) => {
+    meshRef.current.position.x += 1 * delta;
   });
 
   return <mesh ref={meshRef} />;

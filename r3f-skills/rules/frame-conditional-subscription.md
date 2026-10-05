@@ -7,118 +7,75 @@ impact: CRITICAL
 
 ---
 
-## Version Compatibility
+`useFrame` subscribes on mount and unsubscribes on unmount. There is no argument that turns a mounted `useFrame` off.
 
-How `useFrame(callback, renderPriority)` treats `renderPriority` differs between R3F major versions:
-
-| R3F version | `renderPriority` semantics                                                                        | "Disable subscription" technique                            |
-| ----------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **v9+**     | Accepts `null` to skip subscription (or a number for sort order)                                  | Pass `null` as priority → callback is not subscribed at all |
-| **v8.x**    | Number only (default `0`); purely a sort key. Subscription is **unconditional** if hook is called | Use **early-return inside the callback** (Example 3)        |
-
-If you target both versions or are unsure, the early-return pattern (Example 2) works everywhere.
+Passing `null` (or anything else) as the priority does **not** skip the subscription: the callback still runs every frame.
 
 ## Bad Example
 
 ```jsx
-// BAD - Always running
-
-function BadAnimation() {
-  useFrame((state, delta) => {
-    ref.current.rotation.y += delta * 2;
-  });
-}
-```
-
-## Good Example 1 — v9+ (priority `null` disables subscription)
-
-```jsx
-// GOOD - Active only when needed (R3F v9+)
-
-function GoodAnimation({ active }) {
+// BAD - null does not unsubscribe, the callback still runs every frame
+function Spinner({ active }) {
+  const ref = useRef();
   useFrame(
-    () => {
-      // Animation logic
+    (_, delta) => {
+      ref.current.rotation.y += delta;
     },
     active ? 0 : null,
-  ); // null disables the subscription
+  );
+  return <mesh ref={ref} />;
 }
 ```
 
-When `active` flips to `false`, R3F unsubscribes the callback entirely — it is not invoked at all by the render loop.
+## Good Example 1 - Unmount to really unsubscribe
 
-## Good Example 2 — Universal (early return, works in v8.x and v9+)
+Put the `useFrame` in its own component and mount it only while it is needed.
 
 ```jsx
-// GOOD - Alternative with early return
-
-function ConditionalAnimation({ paused }) {
-  useFrame((state, delta) => {
-    if (paused) return;
-    // Animation logic
-  });
-}
-```
-
-## Good Example 3 — v8.x (early return is the only available pattern)
-
-In R3F v8.x, `useFrame` always subscribes when it is called; `renderPriority` is only used to sort callbacks among each other. The relevant runtime code (from `@react-three/fiber@8.18`):
-
-```js
-// node_modules/@react-three/fiber — useFrame implementation
-function useFrame(callback, renderPriority = 0) {
-  const subscribe = store.getState().internal.subscribe;
-  const ref = useMutableCallback(callback);
-  // Always subscribes when callback is provided; renderPriority is only a sort key
-  useIsomorphicLayoutEffect(
-    () => subscribe(ref, renderPriority, store),
-    [renderPriority, subscribe, store],
+// GOOD - No subscription at all while inactive
+function Spinner({ active }) {
+  const ref = useRef();
+  return (
+    <>
+      <mesh ref={ref} />
+      {active && <SpinAnimator target={ref} />}
+    </>
   );
 }
+
+function SpinAnimator({ target }) {
+  useFrame((_, delta) => {
+    target.current.rotation.y += delta;
+  });
+  return null;
+}
 ```
 
-Passing `null` at runtime does **not** opt out of subscription in v8.x (and the TypeScript types reject it: `renderPriority?: number`). The canonical pattern is therefore ref-based gating + early return inside the callback:
+Keep the mesh mounted and only toggle the animator, so the Three.js object is not rebuilt.
+
+## Good Example 2 - Pause with an early return
+
+For animations that pause and resume often, keep the subscription and return early. Gate it with a ref so toggling does not re-render.
 
 ```jsx
-// v8.x: ref-based gate + early return inside callback (one-shot animation)
-
-function OneShotAnimation() {
-  const playingRef = useRef(false);
-  const elapsedRef = useRef(0);
+// GOOD - ~a few ns per frame while idle, no re-render to toggle
+function OneShotAnimation({ duration = 1 }) {
+  const ref = useRef();
+  const playing = useRef(false);
+  const elapsed = useRef(0);
 
   const start = () => {
-    elapsedRef.current = 0;
-    playingRef.current = true;
+    elapsed.current = 0;
+    playing.current = true;
   };
 
   useFrame((_, delta) => {
-    if (!playingRef.current) return; // ~1 ns when idle
-    elapsedRef.current += delta;
-    // Animation logic — mutate refs / Three.js objects directly (no setState)
-    if (elapsedRef.current >= TOTAL_DURATION) {
-      playingRef.current = false; // mark done; subsequent frames early-return
-    }
+    if (!playing.current) return;
+    elapsed.current += delta;
+    ref.current.position.y = Math.sin((elapsed.current / duration) * Math.PI);
+    if (elapsed.current >= duration) playing.current = false;
   });
 
-  // ...
+  return <mesh ref={ref} onClick={start} />;
 }
 ```
-
-Idle cost: a ref dereference + a boolean negation + a conditional jump per frame — single-digit nanoseconds at 60 fps. For one-shot or rarely-active animations, this overhead is negligible compared to upgrading R3F just for this optimization.
-
-### Why not use React state for the gate in v8.x?
-
-You might be tempted to mirror `playing` into `useState` so a re-render can toggle the priority:
-
-```jsx
-// Tempting but broken in v8.x
-const [playing, setPlaying] = useState(false);
-useFrame(callback, playing ? 0 : null); // TS error; null still subscribes at runtime
-```
-
-Two problems:
-
-1. **TypeScript** — v8.x types `renderPriority` as `number | undefined`; `null` is rejected.
-2. **Runtime** — even if you cast and pass `null`, the implementation above still calls `subscribe(ref, null, store)`. The callback runs; you have not avoided anything.
-
-Stick with refs + early return until you migrate to v9.

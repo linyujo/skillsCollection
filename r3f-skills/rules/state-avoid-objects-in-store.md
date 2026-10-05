@@ -12,7 +12,7 @@ impactDescription: Three.js objects are mutable and don't trigger re-renders on 
 
 ```jsx
 // PROBLEMATIC - Mutating Vector3 won't trigger re-renders
-const useStore = create((set) => ({
+const useStore = create((set, get) => ({
   position: new THREE.Vector3(), // Object reference stays same
   updatePosition: (x, y, z) => {
     const pos = get().position;

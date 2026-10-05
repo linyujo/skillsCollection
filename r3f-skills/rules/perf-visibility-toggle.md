@@ -13,16 +13,15 @@ impactDescription: Toggle the visible prop instead of conditionally mounting/unm
 Remounting a component:
 
 1. Destroys the Three.js object
-2. Triggers disposal (if configured)
-3. Creates new geometry/material
-4. Uploads new data to GPU
+2. Disposes its geometry / material
+3. Creates new geometry / material
+4. Uploads new data to the GPU
 5. Recompiles shaders
 
 ## Bad Example
 
 ```jsx
-// BAD - Conditional Mounting
-
+// BAD - Conditional mounting rebuilds everything on every toggle
 function Scene({ showModel }) {
   return <>{showModel && <ExpensiveModel />}</>;
 }
@@ -31,46 +30,24 @@ function Scene({ showModel }) {
 ## Good Example
 
 ```jsx
-// GOOD - Toggle Visibility
-
+// GOOD - Toggle visibility, the object and its GPU resources stay alive
 function Scene({ showModel }) {
   return <ExpensiveModel visible={showModel} />;
 }
 ```
 
-## Good Example 2
+For toggles driven every frame (e.g. by distance), set `ref.current.visible` inside `useFrame` instead of going through React state.
+
+## Good Example 2 - Layers
+
+Layers decide which camera renders an object without touching `visible`.
 
 ```jsx
-// GOOD - Toggle Visibility With Refs
-
-function ToggleableModel() {
-  const meshRef = useRef();
-  const [visible, setVisible] = useState(true);
-
-  // Direct mutation for animations
-  useFrame(() => {
-    if (meshRef.current) {
-      meshRef.current.visible = shouldBeVisible;
-    }
-  });
-
-  return <mesh ref={meshRef} visible={visible} />;
-}
-```
-
-## Good Example 3
-
-For complex visibility logic, consider using Three.js layers.
-Layers allow camera-selective rendering without changing visibility.
-
-```jsx
-// GOOD - Layers allow camera-selective rendering without changing visibility.
-
+// GOOD - Only cameras with layer 1 enabled render this mesh
 function SelectiveRendering() {
   const meshRef = useRef();
 
   useEffect(() => {
-    // Set to layer 1 (not rendered by default camera)
     meshRef.current.layers.set(1);
   }, []);
 
@@ -78,14 +55,15 @@ function SelectiveRendering() {
 }
 ```
 
+The default camera only sees layer 0, so after `layers.set(1)` the mesh disappears from the main view until a camera calls `camera.layers.enable(1)`. The raycaster also only tests layer 0 by default.
+
 ## Use Visibility Toggle When
 
 - Frequent show/hide (e.g., UI state)
 - Object is expensive to create
 - Object is needed again soon
-- Object count is manageable
 
-## When NOT to Use Visibility Toggle
+## Use Remounting When
 
 - Object is rarely shown
 - Memory is constrained
