@@ -38,25 +38,6 @@ function Scene({ showModel }) {
 
 For toggles driven every frame (e.g. by distance), set `ref.current.visible` inside `useFrame` instead of going through React state.
 
-## Good Example 2 - Layers
-
-Layers decide which camera renders an object without touching `visible`.
-
-```jsx
-// GOOD - Only cameras with layer 1 enabled render this mesh
-function SelectiveRendering() {
-  const meshRef = useRef();
-
-  useEffect(() => {
-    meshRef.current.layers.set(1);
-  }, []);
-
-  return <mesh ref={meshRef} />;
-}
-```
-
-The default camera only sees layer 0, so after `layers.set(1)` the mesh disappears from the main view until a camera calls `camera.layers.enable(1)`. The raycaster also only tests layer 0 by default.
-
 ## Use Visibility Toggle When
 
 - Frequent show/hide (e.g., UI state)

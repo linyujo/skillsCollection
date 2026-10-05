@@ -27,7 +27,6 @@ Reference these guidelines when:
 | 2        | useFrame & Animation     | CRITICAL    | `frame-`     |
 | 3        | Component Patterns       | HIGH        | `component-` |
 | 4        | Canvas & Setup           | HIGH        | `canvas-`    |
-| 7        | State Management         | MEDIUM      | `state-`     |
 | 8        | Events & Interaction     | MEDIUM      | `events-`    |
 
 ## Quick Route
@@ -41,7 +40,7 @@ Reference these guidelines when:
 | Particles / VFX    | Points, InstancedMesh, Math heavy, Frame delta      | useFrame & Animation, Performance & Re-renders                     |
 | Shader art         | shaderMaterial, Uniforms, GLSL, Procedural          | useFrame & Animation, Performance & Re-renders, Component Patterns |
 | Interactivity      | onClick, onPointerOver, Raycasting, Hover states    | Events & Interaction, Component Patterns                           |
-| Global State       | Zustand, Cross-component state, UI-to-3D comms      | State Management, Performance & Re-renders                         |
+| Global State       | Zustand, Cross-component state, UI-to-3D comms      | Performance & Re-renders                                           |
 | Camera Controls    | OrbitControls, PresentationControls, Lerp           | useFrame & Animation, Events & Interaction                         |
 | Game/simulation    | Complex logic, Multiple systems, Optimization heavy | All skills                                                         |
 
@@ -66,7 +65,6 @@ rules/perf-zustand-selectors.md
 React re-renders are the #1 performance killer in R3F. The render loop runs at 60fps - React reconciliation must not interfere.
 
 - `perf-never-set-state-in-useframe` - NEVER call setState in useFrame
-- `perf-isolate-state` - Isolate components that need React state
 - `perf-zustand-selectors` - Zustand v5 selectors, useShallow, transient reads, subscribeWithSelector
 - `perf-dispose-auto` - What R3F disposes, dispose={null}, and resources you must dispose yourself
 - `perf-visibility-toggle` - Toggle visibility instead of remounting
@@ -77,7 +75,6 @@ useFrame is R3F's render loop hook. Misuse causes performance disasters.
 
 - `frame-priority` - Positive priority takes over rendering; order with negative numbers and 0
 - `frame-delta-time` - Always use delta for animations
-- `frame-conditional-subscription` - Unmount to unsubscribe, early return to pause
 - `frame-render-on-demand` - Use invalidate() for on-demand rendering
 - `frame-no-allocation` - Don't allocate objects inside useFrame
 
@@ -94,12 +91,6 @@ Proper Canvas configuration
 
 - `canvas-linear-flat` - Don't override R3F's color management
 - `canvas-shadows` - Use shadows="percentage"; PCFSoftShadowMap was removed
-
-### 7. State Management (MEDIUM)
-
-Zustand is the recommended state manager for R3F.
-
-- `state-avoid-objects-in-store` - Be careful with Three.js objects
 
 ### 8. Events & Interaction (MEDIUM)
 

@@ -84,3 +84,7 @@ Not needed for:
 - `@react-three/drei` `<GizmoHelper>`, `<Fisheye>` - also take over rendering
 
 If one of these is mounted, adding your own positive-priority render callback means two callbacks render the frame. Coordinate them (one renders the scene, the other only overlays), or drop yours.
+
+## Priority can't disable a subscription
+
+Priority only orders callbacks or takes over rendering. No priority value (including `null`) turns a mounted `useFrame` off: the callback still runs every frame. To stop it, unmount the component that owns the `useFrame`, or return early at the top of the callback.

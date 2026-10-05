@@ -25,10 +25,10 @@ function BadComponent() {
 
 This triggers React reconciliation 60 times per second, causing:
 
-Massive CPU usage
-Frame drops
-Component re-creation
-Garbage collection pauses
+- High CPU usage on the main thread
+- Frame drops
+- Re-rendering of the component and every child below it
+- Garbage collection pauses from the props and fibers created on each render
 
 ## Good Example
 

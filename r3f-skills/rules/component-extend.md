@@ -62,4 +62,3 @@ declare global {
 ## Notes
 
 - Call `extend({ ... })` at module level, not inside a component.
-- Before extending a three.js addon, check whether drei already wraps it (e.g. `OrbitControls`, `TransformControls`).

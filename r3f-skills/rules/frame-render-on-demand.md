@@ -7,15 +7,7 @@ impact: CRITICAL
 
 ---
 
-## frameloop modes
-
-```jsx
-<Canvas frameloop="always">  {/* Default: render every frame */}
-<Canvas frameloop="demand">  {/* Render only after invalidate() */}
-<Canvas frameloop="never">   {/* Never render by itself, drive it with advance() */}
-```
-
-With `frameloop="demand"`, R3F renders when props change through React and when `invalidate()` is called. Anything that mutates the scene **outside React** must call `invalidate()` itself, or the change never reaches the screen.
+With `<Canvas frameloop="demand">`, R3F renders when props change through React and when `invalidate()` is called. Anything that mutates the scene **outside React** must call `invalidate()` itself, or the change never reaches the screen.
 
 ## Bad Example
 
