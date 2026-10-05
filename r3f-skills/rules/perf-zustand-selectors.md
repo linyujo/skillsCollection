@@ -2,131 +2,134 @@
 
 ---
 
-title: Use Zustand selectors to minimize re-renders.
+title: Use Zustand v5 selectors to minimize re-renders.
 impact: CRITICAL
-impactDescription: Subscribing to the entire Zustand store means your component re-renders whenever ANY value changes. Selectors let you subscribe to specific slices, so components only re-render when their specific data changes.
+impactDescription: Subscribing to the entire store re-renders on every change. In Zustand v5, a selector that returns a new object or array on every call causes an infinite render loop.
 
 ---
 
-## Bad Example
+Zustand v5 changed the hook signature: `useStore(selector)` takes **one** argument. The v4 equality-function argument (`useStore(selector, shallow)`) no longer exists and is silently ignored.
 
-If store state changes, this component re-renders even though it only uses store.playerX.
+## Bad Example 1 - Whole store
 
 ```jsx
 // BAD - Re-renders on ANY store change
-function BadComponent() {
-  const store = useGameStore(); // Subscribes to entire store
+function Player() {
+  const store = useGameStore();
   return <mesh position-x={store.playerX} />;
 }
 ```
 
-## Good Example
+## Bad Example 2 - v4 equality argument
+
+```jsx
+// BAD - v4 style. In v5 `shallow` is ignored; the selector returns a new
+// object on every call → "Maximum update depth exceeded"
+import { shallow } from "zustand/shallow";
+
+const { x, y } = useGameStore((s) => ({ x: s.x, y: s.y }), shallow);
+```
+
+## Good Example 1 - One value per selector
 
 ```jsx
 // GOOD - Re-renders only when playerX changes
-function GoodComponent() {
-  const playerX = useGameStore((state) => state.playerX);
-  return <mesh position-x={playerX} />;
-}
+const playerX = useGameStore((s) => s.playerX);
 ```
 
-## Good Example 2
-
-When selecting multiple values, use shallow equality to prevent re-renders when unrelated values change.
+## Good Example 2 - Several values with useShallow
 
 ```jsx
-// GOOD - Re-renders only when x, y, or z changes
-import { shallow } from "zustand/shallow";
+// GOOD - useShallow keeps the result stable while x and y are unchanged
+import { useShallow } from "zustand/react/shallow";
 
-function GoodComponent() {
-  const { x, y, z } = useGameStore(
-    (state) => ({ x: state.x, y: state.y, z: state.z }),
-    shallow, // Use shallow comparison for objects
-  );
-  return <mesh position={[x, y, z]} />;
-}
+const { x, y } = useGameStore(useShallow((s) => ({ x: s.x, y: s.y })));
+const [health, score] = useGameStore(useShallow((s) => [s.health, s.score]));
 ```
 
-## Good Example 3
+To keep the v4 two-argument form in an existing codebase, create the store with `createWithEqualityFn` from `zustand/traditional` (requires the `use-sync-external-store` package). Prefer `useShallow` for new code.
 
-Zustand's subscribe function allows reading state without causing re-renders.
-For values that change every frame (like positions), use transient subscriptions.
+## Reading without re-rendering
 
-```jsx
-// GOOD - No re-renders, direct mutation
+For values that change every frame, don't subscribe through the hook at all.
 
-function TransientComponent() {
-  const meshRef = useRef();
-
-  useEffect(() => {
-    // Subscribe without causing re-renders
-    const unsubscribe = useGameStore.subscribe(
-      (state) => state.playerPosition,
-      (position) => {
-        meshRef.current.position.copy(position);
-      },
-    );
-    return unsubscribe;
-  }, []);
-
-  return <mesh ref={meshRef} />;
-}
-```
-
-## Good Example 4
-
-Inside useFrame, use getState() which doesn't subscribe:
+### Inside useFrame: getState()
 
 ```jsx
-function AnimatedComponent() {
-  const meshRef = useRef();
+function Follower() {
+  const ref = useRef();
 
-  useFrame(() => {
-    // No subscription, no re-renders
-    const { targetPosition, speed } = useStore.getState();
-    meshRef.current.position.lerp(targetPosition, speed);
+  useFrame((_, delta) => {
+    const { target } = useGameStore.getState(); // No subscription, no re-render
+    ref.current.position.lerp(target, 1 - Math.pow(0.001, delta));
   });
 
-  return <mesh ref={meshRef} />;
+  return <mesh ref={ref} />;
+}
+```
+
+### Outside useFrame: subscribe(listener)
+
+A plain store's `subscribe` takes **only a listener** that receives the whole state:
+
+```jsx
+useEffect(
+  () =>
+    useGameStore.subscribe((state, prevState) => {
+      if (state.score !== prevState.score) playScoreSound();
+    }),
+  [],
+);
+```
+
+### subscribe(selector, listener) needs subscribeWithSelector
+
+`subscribe(selector, listener, options)` only exists when the store is created with the `subscribeWithSelector` middleware. Without it, the selector is treated as the listener and the second function is never called.
+
+```jsx
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import { shallow } from "zustand/shallow";
+
+const useGameStore = create(
+  subscribeWithSelector((set) => ({
+    score: 0,
+    playerPosition: [0, 0, 0],
+    // ...
+  })),
+);
+
+function PlayerMarker() {
+  const ref = useRef();
+
+  useEffect(
+    () =>
+      useGameStore.subscribe(
+        (s) => s.playerPosition,
+        (position) => ref.current.position.fromArray(position),
+        {
+          equalityFn: shallow, // Compare arrays/objects by content
+          fireImmediately: true, // Run once with the current value
+        },
+      ),
+    [],
+  );
+
+  return <mesh ref={ref} />;
 }
 ```
 
 ## Comparison
 
-| Method                        | Re-renders                      | Use Case           |
-| ----------------------------- | ------------------------------- | ------------------ |
-| `useStore()`                  | Every change                    | Never use          |
-| `useStore(s => s.value)`      | When value changes              | Most cases         |
-| `useStore(selector, shallow)` | When any selected value changes | Multiple values    |
-| `useStore.subscribe()`        | Never                           | Continuous updates |
-| `useStore.getState()`         | Never                           | Inside useFrame    |
-
-## Store Design for Performance
-
-```jsx
-const useGameStore = create((set, get) => ({
-  // State
-  playerX: 0,
-  playerY: 0,
-  score: 0,
-  health: 100,
-
-  // Actions (don't subscribe to these)
-  movePlayer: (dx, dy) =>
-    set((state) => ({
-      playerX: state.playerX + dx,
-      playerY: state.playerY + dy,
-    })),
-
-  // Derived values as getters
-  getPlayerPosition: () => {
-    const { playerX, playerY } = get();
-    return new THREE.Vector3(playerX, playerY, 0);
-  },
-}));
-```
+| Method                                         | Re-renders                     | Use case                          |
+| ---------------------------------------------- | ------------------------------ | --------------------------------- |
+| `useStore()`                                   | Every change                   | Never                             |
+| `useStore((s) => s.value)`                     | When `value` changes           | Most cases                        |
+| `useStore(useShallow((s) => ({ a, b })))`      | When `a` or `b` changes        | Several values                    |
+| `useStore.getState()`                          | Never                          | Inside useFrame / event handlers  |
+| `useStore.subscribe(listener)`                 | Never                          | React to changes outside render   |
+| `useStore.subscribe(selector, listener, opts)` | Never                          | Same, per slice (needs `subscribeWithSelector`) |
 
 ## References
 
-- [Zustand Documentation](https://github.com/pmndrs/zustand)
-- [R3F State Management](https://docs.pmnd.rs/react-three-fiber/tutorials/using-with-zustand)
+- [Zustand v5 migration guide](https://github.com/pmndrs/zustand/blob/main/docs/migrations/migrating-to-v5.md)

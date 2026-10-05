@@ -67,8 +67,8 @@ React re-renders are the #1 performance killer in R3F. The render loop runs at 6
 
 - `perf-never-set-state-in-useframe` - NEVER call setState in useFrame
 - `perf-isolate-state` - Isolate components that need React state
-- `perf-zustand-selectors` - Use Zustand selectors, not entire store
-- `perf-dispose-auto` - Understand R3F auto-dispose behavior
+- `perf-zustand-selectors` - Zustand v5 selectors, useShallow, transient reads, subscribeWithSelector
+- `perf-dispose-auto` - What R3F disposes, dispose={null}, and resources you must dispose yourself
 - `perf-visibility-toggle` - Toggle visibility instead of remounting
 
 ### 2. useFrame & Animation (CRITICAL)
@@ -84,20 +84,19 @@ useFrame is R3F's render loop hook. Misuse causes performance disasters.
 
 - `component-primitive` - Clone loaded models correctly before reusing them
 - `component-extend` - Use the v9 extend() API and ThreeElements typing
-- `component-dispose-null` - Set dispose={null} on shared resources
 
 ### 4. Canvas & Setup (HIGH)
 
 Proper Canvas configuration
 
 - `canvas-linear-flat` - Don't override R3F's color management
+- `canvas-shadows` - Use shadows="percentage"; PCFSoftShadowMap was removed
 
 ### 7. State Management (MEDIUM)
 
 Zustand is the recommended state manager for R3F.
 
 - `state-avoid-objects-in-store` - Be careful with Three.js objects
-- `state-subscribeWithSelector` - Fine-grained subscriptions
 
 ### 8. Events & Interaction (MEDIUM)
 
@@ -108,20 +107,21 @@ Zustand is the recommended state manager for R3F.
 ### Critical (Always Do)
 
 - [ ] NEVER use setState in useFrame
-- [ ] Use Zustand selectors (not entire store)
+- [ ] Use Zustand selectors (not entire store); wrap object/array selectors in useShallow
 - [ ] Use refs for animation, not state
 - [ ] Use delta time for animations
 - [ ] Never use a positive useFrame priority just for ordering
 
 ### High Priority
 
-- [ ] Use dispose={null} for shared resources
+- [ ] Dispose resources you create with new / useMemo; use dispose={null} only for JSX resources shared via ref
 - [ ] Clone cached models with SkeletonUtils.clone inside useMemo
 - [ ] Don't override R3F's default color management
+- [ ] Use shadows="percentage", not shadows / shadows="soft"
 
 ### Poimandres Ecosystem
 
-- [ ] Zustand: Selectors, transient subscriptions
+- [ ] Zustand: Selectors, transient subscriptions (subscribe(selector, listener) needs subscribeWithSelector)
 
 ## Sources & Credits
 
