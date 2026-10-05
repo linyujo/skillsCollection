@@ -1,12 +1,11 @@
-# frame-priority
-
 ---
-
-title: Positive priority takes over rendering.
+name: frame-priority
+title: "Positive priority takes over rendering."
 impact: CRITICAL
-impactDescription: Any useFrame with priority > 0 switches off R3F's automatic render. If that callback doesn't render, the screen stops updating.
-
+impactDescription: "Any useFrame with priority > 0 switches off R3F's automatic render. If that callback doesn't render, the screen stops updating."
 ---
+
+# frame-priority
 
 `useFrame(callback, priority)` sorts callbacks from low to high. Default is `0`.
 

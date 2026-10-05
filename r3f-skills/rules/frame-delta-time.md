@@ -1,11 +1,10 @@
-# frame-delta-time
-
 ---
-
-title: Always use delta for frame-rate independent animation.
+name: frame-delta-time
+title: "Always use delta for frame-rate independent animation."
 impact: CRITICAL
-
 ---
+
+# frame-delta-time
 
 ## Bad Example
 

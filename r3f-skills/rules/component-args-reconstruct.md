@@ -1,12 +1,11 @@
-# component-args-reconstruct
-
 ---
-
-title: Changing args rebuilds the whole object.
+name: component-args-reconstruct
+title: "Changing args rebuilds the whole object."
 impact: HIGH
-impactDescription: When any args element changes, R3F disposes the old Three.js object and constructs a new one. GPU data is re-uploaded and everything done to the old object through its ref is lost.
-
+impactDescription: "When any args element changes, R3F disposes the old Three.js object and constructs a new one. GPU data is re-uploaded and everything done to the old object through its ref is lost."
 ---
+
+# component-args-reconstruct
 
 `args` are constructor arguments. Three.js can't apply new constructor arguments to an existing object, so R3F compares `args` element by element (`!==`) on every render and, if anything differs (or the length changes), it:
 

@@ -1,12 +1,11 @@
-# component-ref-as-prop
-
 ---
-
-title: In React 19, pass ref as a regular prop instead of forwardRef.
+name: component-ref-as-prop
+title: "In React 19, pass ref as a regular prop instead of forwardRef."
 impact: HIGH
-impactDescription: React 19 passes ref to function components as a normal prop. forwardRef is no longer needed and is planned for deprecation; most existing R3F examples still use it.
-
+impactDescription: "React 19 passes ref to function components as a normal prop. forwardRef is no longer needed and is planned for deprecation; most existing R3F examples still use it."
 ---
+
+# component-ref-as-prop
 
 ## Bad Example
 

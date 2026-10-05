@@ -1,11 +1,10 @@
-# events-stop-propagation
-
 ---
-
-title: R3F pointer events pass through objects; stop them explicitly.
+name: events-stop-propagation
+title: "R3F pointer events pass through objects; stop them explicitly."
 impact: MEDIUM
-
 ---
+
+# events-stop-propagation
 
 Unlike the DOM, an R3F event is not delivered only to the front-most object. The raycaster collects **every** intersected object with a handler and delivers the event to each of them, nearest first (and bubbles up each one's parents).
 

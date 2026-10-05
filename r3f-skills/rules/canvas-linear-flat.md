@@ -1,11 +1,10 @@
-# canvas-linear-flat
-
 ---
-
-title: Don't override R3F's color management.
+name: canvas-linear-flat
+title: "Don't override R3F's color management."
 impact: HIGH
-
 ---
+
+# canvas-linear-flat
 
 three r152 rewrote color management. Old tutorials (and much training data) still use the removed API.
 

@@ -1,11 +1,10 @@
-# component-extend
-
 ---
-
-title: Use the v9 extend() API and ThreeElements typing.
+name: component-extend
+title: "Use the v9 extend() API and ThreeElements typing."
 impact: HIGH
-
 ---
+
+# component-extend
 
 `extend()` registers Three.js classes that are not in R3F's built-in catalogue (addons, third-party or your own classes) so they can be used as JSX.
 

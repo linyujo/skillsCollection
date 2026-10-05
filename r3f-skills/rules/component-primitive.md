@@ -1,11 +1,10 @@
-# component-primitive
-
 ---
-
-title: Clone loaded models correctly before reusing them.
+name: component-primitive
+title: "Clone loaded models correctly before reusing them."
 impact: HIGH
-
 ---
+
+# component-primitive
 
 `<primitive object={obj} />` mounts an existing Three.js object as-is. Two traps:
 

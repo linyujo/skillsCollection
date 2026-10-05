@@ -1,12 +1,11 @@
-# perf-dispose-auto
-
 ---
-
-title: Understand what R3F disposes, and what it doesn't.
+name: perf-dispose-auto
+title: "Understand what R3F disposes, and what it doesn't."
 impact: CRITICAL
-impactDescription: R3F frees GPU resources it created from JSX, but never the ones you created yourself. Shared JSX resources can be freed too early; resources created with new / useMemo leak.
-
+impactDescription: "R3F frees GPU resources it created from JSX, but never the ones you created yourself. Shared JSX resources can be freed too early; resources created with new / useMemo leak."
 ---
+
+# perf-dispose-auto
 
 ## What R3F actually does on unmount (v9)
 

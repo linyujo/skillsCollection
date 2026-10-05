@@ -1,11 +1,10 @@
-# frame-render-on-demand
-
 ---
-
-title: Use invalidate() for on-demand rendering.
+name: frame-render-on-demand
+title: "Use invalidate() for on-demand rendering."
 impact: CRITICAL
-
 ---
+
+# frame-render-on-demand
 
 With `<Canvas frameloop="demand">`, R3F renders when props change through React and when `invalidate()` is called. Anything that mutates the scene **outside React** must call `invalidate()` itself, or the change never reaches the screen.
 

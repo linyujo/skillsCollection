@@ -1,12 +1,11 @@
-# perf-visibility-toggle
-
 ---
-
-title: Toggle Visibility Instead of Remounting.
+name: perf-visibility-toggle
+title: "Toggle Visibility Instead of Remounting."
 impact: CRITICAL
-impactDescription: Toggle the visible prop instead of conditionally mounting/unmounting components.
-
+impactDescription: "Toggle the visible prop instead of conditionally mounting/unmounting components."
 ---
+
+# perf-visibility-toggle
 
 ## Why It Matters
 

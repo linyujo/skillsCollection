@@ -1,12 +1,11 @@
-# perf-zustand-selectors
-
 ---
-
-title: Use Zustand v5 selectors to minimize re-renders.
+name: perf-zustand-selectors
+title: "Use Zustand v5 selectors to minimize re-renders."
 impact: CRITICAL
-impactDescription: Subscribing to the entire store re-renders on every change. In Zustand v5, a selector that returns a new object or array on every call causes an infinite render loop.
-
+impactDescription: "Subscribing to the entire store re-renders on every change. In Zustand v5, a selector that returns a new object or array on every call causes an infinite render loop."
 ---
+
+# perf-zustand-selectors
 
 Zustand v5 changed the hook signature: `useStore(selector)` takes **one** argument. The v4 equality-function argument (`useStore(selector, shallow)`) no longer exists and is silently ignored.
 

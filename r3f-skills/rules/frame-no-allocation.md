@@ -1,12 +1,11 @@
-# frame-no-allocation
-
 ---
-
-title: Don't allocate objects inside useFrame.
+name: frame-no-allocation
+title: "Don't allocate objects inside useFrame."
 impact: CRITICAL
-impactDescription: useFrame runs 60-120 times per second. Every new Vector3 / Quaternion / Matrix4 / array created there becomes garbage, and periodic garbage collection shows up as frame drops.
-
+impactDescription: "useFrame runs 60-120 times per second. Every new Vector3 / Quaternion / Matrix4 / array created there becomes garbage, and periodic garbage collection shows up as frame drops."
 ---
+
+# frame-no-allocation
 
 ## Bad Example
 

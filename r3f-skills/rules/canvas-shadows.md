@@ -1,12 +1,11 @@
-# canvas-shadows
-
 ---
-
-title: Use shadows="percentage"; PCFSoftShadowMap was removed from three.
+name: canvas-shadows
+title: "Use shadows=\"percentage\"; PCFSoftShadowMap was removed from three."
 impact: HIGH
-impactDescription: Current three (verified on r186) no longer supports PCFSoftShadowMap. R3F v9's default shadows setting still selects it, so three logs a warning and falls back to PCFShadowMap.
-
+impactDescription: "Current three (verified on r186) no longer supports PCFSoftShadowMap. R3F v9's default shadows setting still selects it, so three logs a warning and falls back to PCFShadowMap."
 ---
+
+# canvas-shadows
 
 ## What happens
 

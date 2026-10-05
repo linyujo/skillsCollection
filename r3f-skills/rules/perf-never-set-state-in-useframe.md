@@ -1,12 +1,11 @@
-# perf-never-set-state-in-useframe
-
 ---
-
-title: NEVER call setState inside useFrame.
+name: perf-never-set-state-in-useframe
+title: "NEVER call setState inside useFrame."
 impact: CRITICAL
-impactDescription: This is the #1 performance killer in R3F. Calling setState triggers React re-renders. useFrame runs at 60fps. setState in useFrame = 60 re-renders per second = destroyed performance.
-
+impactDescription: "This is the #1 performance killer in R3F. Calling setState triggers React re-renders. useFrame runs at 60fps. setState in useFrame = 60 re-renders per second = destroyed performance."
 ---
+
+# perf-never-set-state-in-useframe
 
 ## Bad Example
 

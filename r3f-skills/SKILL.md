@@ -1,124 +1,59 @@
 ---
 name: r3f-best-practices
-description: React Three Fiber (R3F) and Poimandres ecosystem decision framework. Use when writing, reviewing, or optimizing R3F code.
+description: Version traps and counter-intuitive pitfalls for React Three Fiber (@react-three/fiber v9) with React 19, three r183+ and Zustand v5. Use when writing or reviewing R3F code that involves useFrame, <Canvas> props (shadows, linear, flat, frameloop), useGLTF / primitive cloning, dispose, args, extend, refs, pointer events, or Zustand stores.
 metadata:
-  author: three-agent-skills
-  version: "1.1.0"
+  author: Raine
+  version: "2.0.0"
+  verified-against: "react 19.3, @react-three/fiber 9.8, three 0.186, zustand 5.0.15 (2026-10)"
 ---
 
-## When to Apply
+# R3F pitfalls
 
-Reference these guidelines when:
+Assumes React 19, @react-three/fiber 9, three r183+ and Zustand 5. Check `package.json` first: on older versions, the rows marked **(v)** may not apply (the recommended API may not exist yet, or the old behavior may still be correct). Read the rule file before applying them.
 
-- Writing new R3F components
-- Optimizing R3F performance (re-renders are the #1 issue)
-- Managing state with Zustand
+Each row is a pattern to look for in code. When writing code, avoid the left column; when reviewing, scan for it. Open `rules/<rule>.md` for the full explanation and examples.
 
-## Ecosystem Coverage
+## useFrame
 
-- **@react-three/fiber** - React renderer for Three.js
-- **zustand** - State management
+| If the code has… | Problem | Do instead | Rule |
+| --- | --- | --- | --- |
+| `setState` inside `useFrame` | 60+ React re-renders per second | Mutate `ref.current` directly | `perf-never-set-state-in-useframe` |
+| `new THREE.*()`, `.clone()`, new arrays / objects inside `useFrame` | GC pauses, frame drops | Reuse scratch objects (module scope or `useMemo`) with `.set()` / `.copy()` | `frame-no-allocation` |
+| `+= 0.01` or `lerp(target, 0.1)` per frame | Speed depends on frame rate | Multiply by `delta`; lerp factor `1 - Math.pow(k, delta)` or `MathUtils.damp` | `frame-delta-time` |
+| `useFrame(fn, n)` with `n > 0` | R3F stops auto-rendering; screen freezes unless `fn` renders | Order with negative numbers and `0`; use `> 0` only when `fn` renders (composer, HUD, viewports) | `frame-priority` |
+| `useFrame(fn, cond ? 0 : null)` to pause | Still subscribed, runs every frame | Unmount the component, or return early in `fn` | `frame-priority` |
+| `frameloop="demand"` + scene changed outside React (store subscription, DOM event, tween) | Change never reaches the screen | Call `invalidate()`, taken via `useThree((s) => s.invalidate)` | `frame-render-on-demand` |
 
-## Rule Categories by Priority
+## Resources and components
 
-| Priority | Category                 | Impact      | Rule Prefix  |
-| -------- | ------------------------ | ----------- | ------------ |
-| 1        | Performance & Re-renders | CRITICAL    | `perf-`      |
-| 2        | useFrame & Animation     | CRITICAL    | `frame-`     |
-| 3        | Component Patterns       | HIGH        | `component-` |
-| 4        | Canvas & Setup           | HIGH        | `canvas-`    |
-| 8        | Events & Interaction     | MEDIUM      | `events-`    |
+| If the code has… | Problem | Do instead | Rule |
+| --- | --- | --- | --- |
+| `{show && <Heavy />}` toggled often | Rebuild, GPU upload and shader recompile on every toggle | `visible={show}` | `perf-visibility-toggle` |
+| `new THREE.*Geometry / *Material / Texture / WebGLRenderTarget` in `useMemo` without cleanup | GPU memory leak (R3F never disposes these) | `.dispose()` in a `useEffect` cleanup | `perf-dispose-auto` |
+| JSX material / geometry shared with other meshes through a ref | Disposed when its owner unmounts | `dispose={null}` on it, or create it in the common parent | `perf-dispose-auto` |
+| One `useGLTF` scene in several `<primitive>`s; `scene.clone()` in render | Only one copy visible; clones on every render; skinned meshes break | `useMemo(() => SkeletonUtils.clone(scene), [scene])` or drei `<Clone>` | `component-primitive` |
+| `args` driven by state / props, or new objects inside `args` | Object is disposed and rebuilt on every change | Settable props (`scale`, `color`, …); `useMemo` for object args | `component-args-reconstruct` |
+| **(v)** `forwardRef` | Unnecessary since React 19 | `function C({ ref, ...props })` | `component-ref-as-prop` |
+| **(v)** `declare global { namespace JSX … }`, `Object3DNode` | Pre-v9 / pre-React 19 typing | Augment `ThreeElements`, or `const X = extend(Class)` | `component-extend` |
 
-## Quick Route
+## Canvas and events
 
-| Scenario           | Key Features / Keywords                             | Category                                                           |
-| ------------------ | --------------------------------------------------- | ------------------------------------------------------------------ |
-| Scene setup        | Canvas, Context, Lights, Shadows, Basic config      | Canvas & Setup, Component Patterns                                 |
-| Simple viewer      | useGLTF, .glb/.gltf, Preloading, Environment        | Performance & Re-renders                                           |
-| HTML / UI Overlays | Html, Text, DOM elements in 3D, Annotations, UI     | Events & Interaction, Performance & Re-renders                     |
-| Custom geometry    | bufferGeometry, 3D shapes, Attributes, Vertices     | Component Patterns, Performance & Re-renders                       |
-| Particles / VFX    | Points, InstancedMesh, Math heavy, Frame delta      | useFrame & Animation, Performance & Re-renders                     |
-| Shader art         | shaderMaterial, Uniforms, GLSL, Procedural          | useFrame & Animation, Performance & Re-renders, Component Patterns |
-| Interactivity      | onClick, onPointerOver, Raycasting, Hover states    | Events & Interaction, Component Patterns                           |
-| Global State       | Zustand, Cross-component state, UI-to-3D comms      | Performance & Re-renders                                           |
-| Camera Controls    | OrbitControls, PresentationControls, Lerp           | useFrame & Animation, Events & Interaction                         |
-| Game/simulation    | Complex logic, Multiple systems, Optimization heavy | All skills                                                         |
+| If the code has… | Problem | Do instead | Rule |
+| --- | --- | --- | --- |
+| **(v)** `outputEncoding`, `sRGBEncoding`, `texture.encoding`; `linear` / `flat` added by habit | Removed API; wrong colors | Keep R3F's defaults; use `colorSpace` | `canvas-linear-flat` |
+| **(v)** `<Canvas shadows>`, `shadows="soft"`, `PCFSoftShadowMap` | No longer supported by three: warning + fallback | `shadows="percentage"` + light `shadow-radius` | `canvas-shadows` |
+| Overlapping meshes with `onClick` / `onPointerOver` | Objects behind also receive the event | `e.stopPropagation()` in the front handler | `events-stop-propagation` |
 
-## How to Use Categories
+## Zustand
 
-Read individual rule files for detailed explanations and code examples:
+| If the code has… | Problem | Do instead | Rule |
+| --- | --- | --- | --- |
+| **(v)** `useStore()`, `useStore(sel, shallow)`, or a selector returning a new object / array | Re-render on every change; infinite render loop in v5 | One value per selector, or `useShallow`; `getState()` inside `useFrame` | `perf-zustand-selectors` |
+| **(v)** `store.subscribe(selector, listener)` on a plain store | Listener is never called | Create the store with `subscribeWithSelector` | `perf-zustand-selectors` |
 
-1. Go to Quick Reference
-2. Find the category that matches your needs
-3. Read the rules in that category
-4. Apply the rules to your code
+## Maintenance
 
-```
-rules/perf-never-set-state-in-useframe.md
-rules/perf-zustand-selectors.md
-```
-
-## Quick Reference
-
-### 1. Performance & Re-renders (CRITICAL)
-
-React re-renders are the #1 performance killer in R3F. The render loop runs at 60fps - React reconciliation must not interfere.
-
-- `perf-never-set-state-in-useframe` - NEVER call setState in useFrame
-- `perf-zustand-selectors` - Zustand v5 selectors, useShallow, transient reads, subscribeWithSelector
-- `perf-dispose-auto` - What R3F disposes, dispose={null}, and resources you must dispose yourself
-- `perf-visibility-toggle` - Toggle visibility instead of remounting
-
-### 2. useFrame & Animation (CRITICAL)
-
-useFrame is R3F's render loop hook. Misuse causes performance disasters.
-
-- `frame-priority` - Positive priority takes over rendering; order with negative numbers and 0
-- `frame-delta-time` - Always use delta for animations
-- `frame-render-on-demand` - Use invalidate() for on-demand rendering
-- `frame-no-allocation` - Don't allocate objects inside useFrame
-
-### 3. Component Patterns (HIGH)
-
-- `component-primitive` - Clone loaded models correctly before reusing them
-- `component-extend` - Use the v9 extend() API and ThreeElements typing
-- `component-ref-as-prop` - React 19: pass ref as a prop instead of forwardRef
-- `component-args-reconstruct` - Changing args rebuilds the whole object
-
-### 4. Canvas & Setup (HIGH)
-
-Proper Canvas configuration
-
-- `canvas-linear-flat` - Don't override R3F's color management
-- `canvas-shadows` - Use shadows="percentage"; PCFSoftShadowMap was removed
-
-### 8. Events & Interaction (MEDIUM)
-
-- `events-stop-propagation` - Events pass through objects; stop them explicitly
-
-## Quick Reference Card
-
-### Critical (Always Do)
-
-- [ ] NEVER use setState in useFrame
-- [ ] Use Zustand selectors (not entire store); wrap object/array selectors in useShallow
-- [ ] Use refs for animation, not state
-- [ ] Use delta time for animations
-- [ ] Never use a positive useFrame priority just for ordering
-- [ ] No allocation in useFrame (no new / clone; reuse scratch objects)
-
-### High Priority
-
-- [ ] Don't change args to animate; use props like scale instead
-- [ ] Pass ref as a prop (React 19), no forwardRef
-- [ ] Dispose resources you create with new / useMemo; use dispose={null} only for JSX resources shared via ref
-- [ ] Clone cached models with SkeletonUtils.clone inside useMemo
-- [ ] Don't override R3F's default color management
-- [ ] Use shadows="percentage", not shadows / shadows="soft"
-
-### Poimandres Ecosystem
-
-- [ ] Zustand: Selectors, transient subscriptions (subscribe(selector, listener) needs subscribeWithSelector)
+Rules marked **(v)** depend on library versions. When upgrading any package listed in `verified-against`, re-check those rules against the new source and update `verified-against`.
 
 ## Sources & Credits
 
