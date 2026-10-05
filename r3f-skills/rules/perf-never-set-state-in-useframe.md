@@ -46,3 +46,5 @@ function GoodComponent() {
 ```
 
 The ref gives direct access to the Three.js object. Mutating it doesn't trigger React.
+
+Mutating refs avoids re-renders, but creating new objects inside useFrame still causes GC pauses. See `frame-no-allocation`.

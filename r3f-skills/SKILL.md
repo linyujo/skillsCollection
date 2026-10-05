@@ -79,11 +79,14 @@ useFrame is R3F's render loop hook. Misuse causes performance disasters.
 - `frame-delta-time` - Always use delta for animations
 - `frame-conditional-subscription` - Unmount to unsubscribe, early return to pause
 - `frame-render-on-demand` - Use invalidate() for on-demand rendering
+- `frame-no-allocation` - Don't allocate objects inside useFrame
 
 ### 3. Component Patterns (HIGH)
 
 - `component-primitive` - Clone loaded models correctly before reusing them
 - `component-extend` - Use the v9 extend() API and ThreeElements typing
+- `component-ref-as-prop` - React 19: pass ref as a prop instead of forwardRef
+- `component-args-reconstruct` - Changing args rebuilds the whole object
 
 ### 4. Canvas & Setup (HIGH)
 
@@ -111,9 +114,12 @@ Zustand is the recommended state manager for R3F.
 - [ ] Use refs for animation, not state
 - [ ] Use delta time for animations
 - [ ] Never use a positive useFrame priority just for ordering
+- [ ] No allocation in useFrame (no new / clone; reuse scratch objects)
 
 ### High Priority
 
+- [ ] Don't change args to animate; use props like scale instead
+- [ ] Pass ref as a prop (React 19), no forwardRef
 - [ ] Dispose resources you create with new / useMemo; use dispose={null} only for JSX resources shared via ref
 - [ ] Clone cached models with SkeletonUtils.clone inside useMemo
 - [ ] Don't override R3F's default color management
